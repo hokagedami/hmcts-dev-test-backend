@@ -252,6 +252,32 @@ All API responses follow a consistent structure:
 }
 ```
 
+## Logging
+
+The application uses SLF4J with Logback and includes integration with [Seq](https://datalust.co/seq) for centralized log management.
+
+### Features
+
+- **Structured JSON logging** via Logstash encoder
+- **Seq integration** via custom HTTP appender (CLEF format)
+- **Request correlation** using MDC (requestId, method, path, clientIp)
+- **Request/response logging** with timing metrics
+
+### Configuration
+
+Seq server URL can be configured in `src/main/resources/logback.xml`:
+
+```xml
+<appender name="SEQ" class="uk.gov.hmcts.reform.dev.logging.SeqAppender">
+    <serverUrl>http://localhost:5341</serverUrl>
+</appender>
+```
+
+### Log Levels
+
+- `uk.gov.hmcts.reform.dev` - DEBUG level
+- Root logger - INFO level
+
 ## Testing
 
 ```bash
@@ -270,9 +296,28 @@ All API responses follow a consistent structure:
 
 ### Test Coverage
 
-- **Unit Tests**: TaskService business logic
+- **Unit Tests**: TaskService business logic, TaskRepository data access
 - **Integration Tests**: Controller layer with MockMvc
 - **Functional Tests**: End-to-end API testing with REST-Assured
+
+### Repository Tests
+
+The `TaskRepositoryTest` class uses `@DataJpaTest` to test all custom query methods:
+
+| Method | Description |
+|--------|-------------|
+| `findByIdAndDeletedFalse` | Find task by ID excluding deleted |
+| `findByDeletedFalse` | Find all non-deleted tasks |
+| `existsByIdAndDeletedFalse` | Check task existence |
+| `findByStatusAndDeletedFalse` | Filter by status |
+| `findByPriorityAndDeletedFalse` | Filter by priority |
+| `findByStatusAndPriorityAndDeletedFalse` | Filter by status and priority |
+| `findByTitleContainingIgnoreCaseAndDeletedFalse` | Search by title |
+| `findOverdueTasks` | Find overdue incomplete tasks |
+| `findByDueDateTimeBeforeAndDeletedFalse` | Find tasks due before date |
+| `findByDueDateTimeAfterAndDeletedFalse` | Find tasks due after date |
+| `findWithFilters` | Complex filter with status, priority, search |
+| `findByIdInAndDeletedFalse` | Bulk find by IDs |
 
 ## Project Structure
 
@@ -280,6 +325,7 @@ All API responses follow a consistent structure:
 src/
 ├── main/java/uk/gov/hmcts/reform/dev/
 │   ├── controllers/
+│   │   ├── RootController.java      # Health check endpoint
 │   │   └── TaskController.java      # REST endpoints
 │   ├── services/
 │   │   └── TaskService.java         # Business logic
@@ -293,9 +339,12 @@ src/
 │   │       ├── ApiResponse.java     # Structured response wrapper
 │   │       ├── PagedData.java       # Pagination wrapper
 │   │       └── ...                  # Request/Response DTOs
-│   └── exceptions/
-│       ├── TaskNotFoundException.java
-│       └── GlobalExceptionHandler.java
+│   ├── exceptions/
+│   │   ├── TaskNotFoundException.java
+│   │   └── GlobalExceptionHandler.java
+│   └── logging/
+│       ├── SeqAppender.java         # Custom Seq HTTP appender
+│       └── RequestLoggingFilter.java # Request/response logging
 ├── test/                            # Unit tests
 ├── integrationTest/                 # Integration tests
 └── functionalTest/                  # Functional tests

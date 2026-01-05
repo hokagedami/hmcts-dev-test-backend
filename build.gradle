@@ -73,6 +73,9 @@ tasks.withType(Test).configureEach {
   testLogging {
     exceptionFormat = 'full'
   }
+
+  // Configure Mockito as Java agent to avoid dynamic agent loading warnings
+  jvmArgs '-XX:+EnableDynamicAgentLoading'
 }
 
 tasks.named('test') {
@@ -145,6 +148,7 @@ repositories {
 ext {
   log4JVersion = "2.25.3"
   logbackVersion = "1.5.22"
+  logstashLogbackVersion = "8.0"
 }
 
 ext['snakeyaml.version'] = '2.2'
@@ -154,7 +158,11 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
   implementation 'org.springframework.boot:spring-boot-starter-aop'
   implementation 'org.springframework.boot:spring-boot-starter-json'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
+
+  runtimeOnly 'com.h2database:h2'
 
   implementation 'com.github.hmcts.java-logging:logging:6.1.9'
 
@@ -162,6 +170,7 @@ dependencies {
   implementation "org.apache.logging.log4j:log4j-to-slf4j:${log4JVersion}"
   implementation "ch.qos.logback:logback-classic:${logbackVersion}"
   implementation "ch.qos.logback:logback-core:${logbackVersion}"
+  implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}"
 
   // CVE-2025-48924: Override transitive dependency to fix StackOverflowError vulnerability
   implementation 'org.apache.commons:commons-lang3:3.18.0'

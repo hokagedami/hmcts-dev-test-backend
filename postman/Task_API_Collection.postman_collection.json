@@ -1,0 +1,1868 @@
+{
+	"info": {
+		"_postman_id": "task-api-collection-v2",
+		"name": "Task Management API v1 - Complete",
+		"description": "Comprehensive API collection for Task Management endpoints with all edge cases.\n\n## Base URL\n- Local: http://localhost:4000\n\n## Features\n- CRUD operations for tasks\n- Task status: PENDING, IN_PROGRESS, COMPLETED, CANCELLED\n- Task priority: LOW, MEDIUM, HIGH, URGENT\n- Soft delete functionality\n- Bulk operations\n- Pagination, filtering, and sorting\n- Overdue task tracking\n\n## Response Format\nAll responses follow a consistent structure:\n```json\n{\n    \"success\": true/false,\n    \"message\": \"...\",\n    \"data\": { ... },\n    \"timestamp\": \"...\",\n    \"error\": { ... }\n}\n```\n\n## Error Types\n- NOT_FOUND (404)\n- VALIDATION_ERROR (400)\n- MALFORMED_REQUEST (400)\n- INVALID_ARGUMENT (400)\n- INTERNAL_ERROR (500)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "taskId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "futureDate",
+			"value": "2026-02-15T17:00:00",
+			"type": "string"
+		},
+		{
+			"key": "pastDate",
+			"value": "2020-01-01T17:00:00",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Health & Info",
+			"item": [
+				{
+					"name": "Welcome",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains welcome message\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"Welcome\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": ["{{baseUrl}}"],
+							"path": [""]
+						},
+						"description": "Root endpoint - returns welcome message"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"body": "Welcome to test-backend"
+						}
+					]
+				},
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success=true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Status is UP\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check endpoint - returns service status"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Service is healthy\",\n    \"data\": {\n        \"status\": \"UP\"\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. Create Tasks",
+			"item": [
+				{
+					"name": "Create Task - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has success=true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Task has correct data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.id).to.exist;",
+									"    pm.expect(jsonData.data.title).to.eql(\"Complete project documentation\");",
+									"    pm.expect(jsonData.data.status).to.eql(\"PENDING\");",
+									"    pm.expect(jsonData.data.priority).to.eql(\"HIGH\");",
+									"    pm.collectionVariables.set(\"taskId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Complete project documentation\",\n    \"description\": \"Write comprehensive API documentation\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Create a new task with all valid fields"
+					},
+					"response": [
+						{
+							"name": "Success - 201 Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Task created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"title\": \"Complete project documentation\",\n        \"description\": \"Write comprehensive API documentation\",\n        \"status\": \"PENDING\",\n        \"priority\": \"HIGH\",\n        \"dueDateTime\": \"2026-02-15T17:00:00\",\n        \"createdAt\": \"2026-01-05T10:30:00\",\n        \"updatedAt\": \"2026-01-05T10:30:00\",\n        \"overdue\": false\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Task - Minimal (Title + DueDate only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Default priority is MEDIUM\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.priority).to.eql(\"MEDIUM\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Minimal Task\",\n    \"dueDateTime\": \"{{futureDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Create task with only required fields - should default priority to MEDIUM"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Missing Title (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response has success=false\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(false);",
+									"});",
+									"",
+									"pm.test(\"Error type is VALIDATION_ERROR\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.type).to.eql(\"VALIDATION_ERROR\");",
+									"});",
+									"",
+									"pm.test(\"Title field error exists\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.fieldErrors.title).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Missing title field\",\n    \"dueDateTime\": \"{{futureDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Validation error - title is required"
+					},
+					"response": [
+						{
+							"name": "Validation Error - 400",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Validation failed for one or more fields\",\n    \"error\": {\n        \"code\": 400,\n        \"type\": \"VALIDATION_ERROR\",\n        \"fieldErrors\": {\n            \"title\": \"Title is required\"\n        }\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Task - Empty Title (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Title field error exists\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.fieldErrors.title).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"\",\n    \"dueDateTime\": \"{{futureDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Validation error - empty title"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Whitespace Only Title (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"   \",\n    \"dueDateTime\": \"{{futureDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Validation error - whitespace only title"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Missing DueDateTime (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"DueDateTime field error exists\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.fieldErrors.dueDateTime).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Task without due date\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Validation error - dueDateTime is required"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Past DueDateTime (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"DueDateTime field error exists\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.fieldErrors.dueDateTime).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Task with past date\",\n    \"dueDateTime\": \"{{pastDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Validation error - dueDateTime must be in the future"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Invalid JSON (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error type is MALFORMED_REQUEST\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.type).to.eql(\"MALFORMED_REQUEST\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ invalid json }"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Malformed JSON request"
+					},
+					"response": [
+						{
+							"name": "Malformed Request - 400",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Malformed JSON request\",\n    \"error\": {\n        \"code\": 400,\n        \"type\": \"MALFORMED_REQUEST\"\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Task - Empty Body (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Empty request body"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - All Priorities",
+					"item": [
+						{
+							"name": "Create Task - Priority LOW",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"pm.test(\"Priority is LOW\", function () {",
+											"    pm.expect(pm.response.json().data.priority).to.eql(\"LOW\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Low priority task\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"priority\": \"LOW\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/tasks",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "v1", "tasks"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Task - Priority MEDIUM",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"pm.test(\"Priority is MEDIUM\", function () {",
+											"    pm.expect(pm.response.json().data.priority).to.eql(\"MEDIUM\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Medium priority task\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"priority\": \"MEDIUM\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/tasks",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "v1", "tasks"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Task - Priority HIGH",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"pm.test(\"Priority is HIGH\", function () {",
+											"    pm.expect(pm.response.json().data.priority).to.eql(\"HIGH\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"High priority task\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"priority\": \"HIGH\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/tasks",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "v1", "tasks"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Task - Priority URGENT",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"pm.test(\"Priority is URGENT\", function () {",
+											"    pm.expect(pm.response.json().data.priority).to.eql(\"URGENT\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Urgent priority task\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"priority\": \"URGENT\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/tasks",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "v1", "tasks"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Create Bulk Tasks - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has array of 3 tasks\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"    pm.expect(jsonData.data.length).to.eql(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"title\": \"Bulk Task 1\",\n        \"dueDateTime\": \"{{futureDate}}\",\n        \"priority\": \"LOW\"\n    },\n    {\n        \"title\": \"Bulk Task 2\",\n        \"dueDateTime\": \"{{futureDate}}\",\n        \"priority\": \"MEDIUM\"\n    },\n    {\n        \"title\": \"Bulk Task 3\",\n        \"dueDateTime\": \"{{futureDate}}\",\n        \"priority\": \"HIGH\"\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk"]
+						},
+						"description": "Create multiple tasks in a single request"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Bulk Tasks - Empty Array (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk"]
+						},
+						"description": "Empty array should fail"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Read Tasks",
+			"item": [
+				{
+					"name": "Get All Tasks - Default",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.items).to.be.an('array');",
+									"    pm.expect(jsonData.data.page).to.exist;",
+									"    pm.expect(jsonData.data.size).to.exist;",
+									"    pm.expect(jsonData.data.totalElements).to.exist;",
+									"    pm.expect(jsonData.data.totalPages).to.exist;",
+									"    pm.expect(jsonData.data.first).to.exist;",
+									"    pm.expect(jsonData.data.last).to.exist;",
+									"    pm.expect(jsonData.data.hasNext).to.exist;",
+									"    pm.expect(jsonData.data.hasPrevious).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Get all tasks with default pagination (20 per page)"
+					},
+					"response": [
+						{
+							"name": "Success - 200",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Tasks retrieved successfully\",\n    \"data\": {\n        \"items\": [],\n        \"page\": 0,\n        \"size\": 20,\n        \"totalElements\": 0,\n        \"totalPages\": 0,\n        \"first\": true,\n        \"last\": true,\n        \"hasNext\": false,\n        \"hasPrevious\": false\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Tasks - Custom Page Size",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Page size is 5\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.size).to.eql(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?page=0&size=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "page", "value": "0"},
+								{"key": "size", "value": "5"}
+							]
+						},
+						"description": "Get tasks with custom page size"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Page 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Page number is 1\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.page).to.eql(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?page=1&size=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "size", "value": "5"}
+							]
+						},
+						"description": "Get second page of tasks"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Status PENDING",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All tasks have PENDING status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.items.forEach(function(task) {",
+									"        pm.expect(task.status).to.eql(\"PENDING\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?status=PENDING",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "status", "value": "PENDING"}
+							]
+						},
+						"description": "Filter tasks by PENDING status"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Status IN_PROGRESS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?status=IN_PROGRESS",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "status", "value": "IN_PROGRESS"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Status COMPLETED",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?status=COMPLETED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "status", "value": "COMPLETED"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Status CANCELLED",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?status=CANCELLED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "status", "value": "CANCELLED"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Priority HIGH",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All tasks have HIGH priority\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.items.forEach(function(task) {",
+									"        pm.expect(task.priority).to.eql(\"HIGH\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?priority=HIGH",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "priority", "value": "HIGH"}
+							]
+						},
+						"description": "Filter tasks by HIGH priority"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Filter by Priority URGENT",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?priority=URGENT",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "priority", "value": "URGENT"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Search by Title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All tasks contain search term in title\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.items.forEach(function(task) {",
+									"        pm.expect(task.title.toLowerCase()).to.include(\"project\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?search=project",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "search", "value": "project"}
+							]
+						},
+						"description": "Search tasks by title (case-insensitive)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Combined Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?status=PENDING&priority=HIGH&search=task",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "status", "value": "PENDING"},
+								{"key": "priority", "value": "HIGH"},
+								{"key": "search", "value": "task"}
+							]
+						},
+						"description": "Combine multiple filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Sort by Title ASC",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?sort=title,asc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "sort", "value": "title,asc"}
+							]
+						},
+						"description": "Sort tasks by title ascending"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Sort by DueDateTime DESC",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?sort=dueDateTime,desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "sort", "value": "dueDateTime,desc"}
+							]
+						},
+						"description": "Sort tasks by due date descending"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks - Sort by Priority",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks?sort=priority,desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{"key": "sort", "value": "priority,desc"}
+							]
+						},
+						"description": "Sort tasks by priority descending"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task by ID - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has task data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.id).to.exist;",
+									"    pm.expect(jsonData.data.title).to.exist;",
+									"    pm.expect(jsonData.data.status).to.exist;",
+									"    pm.expect(jsonData.data.priority).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}"]
+						},
+						"description": "Get a specific task by ID"
+					},
+					"response": [
+						{
+							"name": "Success - 200",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Task retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"title\": \"Complete project documentation\",\n        \"description\": \"Write comprehensive API documentation\",\n        \"status\": \"PENDING\",\n        \"priority\": \"HIGH\",\n        \"dueDateTime\": \"2026-02-15T17:00:00\",\n        \"createdAt\": \"2026-01-05T10:30:00\",\n        \"updatedAt\": \"2026-01-05T10:30:00\",\n        \"overdue\": false\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Task by ID - Not Found (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error type is NOT_FOUND\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.type).to.eql(\"NOT_FOUND\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "99999"]
+						},
+						"description": "Get a task that doesn't exist"
+					},
+					"response": [
+						{
+							"name": "Not Found - 404",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Task not found with id: 99999\",\n    \"error\": {\n        \"code\": 404,\n        \"type\": \"NOT_FOUND\"\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Task by ID - Invalid ID (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/invalid",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "invalid"]
+						},
+						"description": "Get task with non-numeric ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task by ID - Negative ID (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 404\", function () {",
+									"    pm.expect([400, 404]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/-1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "-1"]
+						},
+						"description": "Get task with negative ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Overdue Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All tasks are overdue\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.items.forEach(function(task) {",
+									"        pm.expect(task.overdue).to.eql(true);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/overdue",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "overdue"]
+						},
+						"description": "Get all overdue tasks"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Update Tasks",
+			"item": [
+				{
+					"name": "Update Task (Full) - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Task was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.title).to.eql(\"Updated Task Title\");",
+									"    pm.expect(jsonData.data.status).to.eql(\"IN_PROGRESS\");",
+									"    pm.expect(jsonData.data.priority).to.eql(\"URGENT\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Task Title\",\n    \"description\": \"Updated description\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"status\": \"IN_PROGRESS\",\n    \"priority\": \"URGENT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}"]
+						},
+						"description": "Full update of a task"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - Not Found (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Title\",\n    \"description\": \"Updated description\",\n    \"dueDateTime\": \"{{futureDate}}\",\n    \"status\": \"PENDING\",\n    \"priority\": \"MEDIUM\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "99999"]
+						},
+						"description": "Update a task that doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - Validation Error (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"\",\n    \"dueDateTime\": \"{{futureDate}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}"]
+						},
+						"description": "Update with invalid data"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - To PENDING",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Status is PENDING\", function () {",
+									"    pm.expect(pm.response.json().data.status).to.eql(\"PENDING\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"PENDING\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - To IN_PROGRESS",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Status is IN_PROGRESS\", function () {",
+									"    pm.expect(pm.response.json().data.status).to.eql(\"IN_PROGRESS\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - To COMPLETED",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Status is COMPLETED\", function () {",
+									"    pm.expect(pm.response.json().data.status).to.eql(\"COMPLETED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - To CANCELLED",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Status is CANCELLED\", function () {",
+									"    pm.expect(pm.response.json().data.status).to.eql(\"CANCELLED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"CANCELLED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - Not Found (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/99999/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "99999", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Status - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response shows affected count\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.affected).to.exist;",
+									"    pm.expect(jsonData.data.requested).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 2, 3],\n    \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk", "status"]
+						},
+						"description": "Update status for multiple tasks"
+					},
+					"response": [
+						{
+							"name": "Success - 200",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"3 task(s) status updated successfully\",\n    \"data\": {\n        \"affected\": 3,\n        \"requested\": 3\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Bulk Update Status - Partial (Some IDs Not Found)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Affected count may be less than requested\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.affected).to.be.at.most(jsonData.data.requested);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 99998, 99999],\n    \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk", "status"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Delete Tasks",
+			"item": [
+				{
+					"name": "Delete Task - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success=true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "{{taskId}}"]
+						},
+						"description": "Soft delete a task"
+					},
+					"response": [
+						{
+							"name": "Success - 200",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Task deleted successfully\",\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Task - Not Found (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "99999"]
+						},
+						"description": "Delete a task that doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Delete - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response shows affected count\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.affected).to.exist;",
+									"    pm.expect(jsonData.data.requested).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk"]
+						},
+						"description": "Soft delete multiple tasks"
+					},
+					"response": [
+						{
+							"name": "Success - 200",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"3 task(s) deleted successfully\",\n    \"data\": {\n        \"affected\": 3,\n        \"requested\": 3\n    },\n    \"timestamp\": \"2026-01-05T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Bulk Delete - Partial (Some IDs Not Found)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 99998, 99999]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tasks/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tasks", "bulk"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Swagger & Docs",
+			"item": [
+				{
+					"name": "Swagger UI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/swagger-ui.html",
+							"host": ["{{baseUrl}}"],
+							"path": ["swagger-ui.html"]
+						},
+						"description": "Open Swagger UI in browser"
+					},
+					"response": []
+				},
+				{
+					"name": "OpenAPI JSON",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is valid OpenAPI spec\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.openapi).to.exist;",
+									"    pm.expect(jsonData.info).to.exist;",
+									"    pm.expect(jsonData.paths).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v3/api-docs",
+							"host": ["{{baseUrl}}"],
+							"path": ["v3", "api-docs"]
+						},
+						"description": "Get OpenAPI specification in JSON format"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

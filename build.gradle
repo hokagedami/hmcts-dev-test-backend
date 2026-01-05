@@ -14,7 +14,7 @@ version = '0.0.1'
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
+    languageVersion = JavaLanguageVersion.of(24)
   }
 }
 
@@ -58,7 +58,7 @@ configurations {
   smokeTestRuntimeOnly.extendsFrom runtimeOnly
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.compilerArgs << "-Xlint:unchecked" << "-Werror"
 }
 
@@ -67,7 +67,7 @@ tasks.withType(JavaExec).configureEach {
   javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   useJUnitPlatform()
 
   testLogging {
@@ -75,18 +75,18 @@ tasks.withType(Test) {
   }
 }
 
-test {
+tasks.named('test') {
   failFast = true
 }
 
-task functional(type: Test) {
+tasks.register('functional', Test) {
   description = "Runs functional tests"
   group = "Verification"
   testClassesDirs = sourceSets.functionalTest.output.classesDirs
   classpath = sourceSets.functionalTest.runtimeClasspath
 }
 
-task integration(type: Test) {
+tasks.register('integration', Test) {
   description = "Runs integration tests"
   group = "Verification"
   testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -94,14 +94,14 @@ task integration(type: Test) {
   failFast = true
 }
 
-task smoke(type: Test) {
+tasks.register('smoke', Test) {
   description = "Runs Smoke Tests"
   testClassesDirs = sourceSets.smokeTest.output.classesDirs
   classpath = sourceSets.smokeTest.runtimeClasspath
 }
 
-jacocoTestReport {
-  executionData(test, integration)
+tasks.named('jacocoTestReport') {
+  executionData(tasks.named('test'), tasks.named('integration'))
   reports {
     xml.required = true
     csv.required = false
@@ -109,8 +109,8 @@ jacocoTestReport {
   }
 }
 
-project.tasks['sonarqube'].dependsOn jacocoTestReport
-project.tasks['check'].dependsOn integration
+tasks.named('sonarqube') { dependsOn tasks.named('jacocoTestReport') }
+tasks.named('check') { dependsOn tasks.named('integration') }
 
 sonarqube {
   properties {
@@ -139,7 +139,7 @@ dependencyCheck {
 repositories {
   mavenLocal()
   mavenCentral()
-  maven { url 'https://jitpack.io' }
+  maven { url = uri('https://jitpack.io') }
 }
 
 ext {
@@ -150,32 +150,37 @@ ext {
 ext['snakeyaml.version'] = '2.2'
 
 dependencies {
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'
-  implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.14'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-aop'
+  implementation 'org.springframework.boot:spring-boot-starter-json'
+  implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
 
-  implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '6.1.9'
+  implementation 'com.github.hmcts.java-logging:logging:6.1.9'
 
-  implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion
-  implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion
-  implementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
-  implementation group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+  implementation "org.apache.logging.log4j:log4j-api:${log4JVersion}"
+  implementation "org.apache.logging.log4j:log4j-to-slf4j:${log4JVersion}"
+  implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+  implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
-  implementation group: 'io.rest-assured', name: 'rest-assured'
-  implementation group: 'org.projectlombok', name: 'lombok'
+  // CVE-2025-48924: Override transitive dependency to fix StackOverflowError vulnerability
+  implementation 'org.apache.commons:commons-lang3:3.18.0'
+
+  implementation 'io.rest-assured:rest-assured'
+  implementation 'org.projectlombok:lombok'
   annotationProcessor 'org.projectlombok:lombok'
 
   testImplementation(platform('org.junit:junit-bom:6.0.1'))
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', {
+  testImplementation('org.springframework.boot:spring-boot-starter-test') {
     exclude group: 'junit', module: 'junit'
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
 }
 
-mainClassName = 'uk.gov.hmcts.reform.dev.Application'
+application {
+  mainClass = 'uk.gov.hmcts.reform.dev.Application'
+}
 
 bootJar {
   archiveFileName = "test-backend.jar"
